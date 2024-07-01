@@ -1,0 +1,26 @@
+WITH liquidity_ratio AS( 
+    SELECT
+        us_companies.company_id,
+        us_companies.ticker,
+        Company_Name,
+        Total_Current_Assets,
+        Inventories,
+        Total_Current_Liabilities,
+        ROUND((total_current_assets - Inventories) / NULLIF(Total_Current_Liabilities, 0), 2) AS acid_test_ratio
+    FROM
+        us_companies
+    LEFT JOIN balance_sheet ON us_companies.company_id = balance_sheet.company_id
+    WHERE
+        (industry_id BETWEEN 101000 AND 101006) AND
+        fiscal_year = 2022 AND
+        fiscal_period = 'Q2' 
+)
+
+SELECT *
+FROM
+    liquidity_ratio
+WHERE
+    acid_test_ratio > (SELECT AVG(acid_test_ratio) FROM liquidity_ratio)
+ORDER BY
+    acid_test_ratio DESC;
+

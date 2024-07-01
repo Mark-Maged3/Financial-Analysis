@@ -1,0 +1,24 @@
+WITH income_statement_ratio AS(
+    SELECT
+        us_companies.company_id,
+        us_companies.ticker,
+        company_name,
+        operating_income,
+        interest_expense_net,
+        ROUND(operating_income / NULLIF(interest_expense_net, 0), 2) AS interest_coverage
+    FROM
+        us_companies
+    LEFT JOIN income_statement ON us_companies.company_id = income_statement.company_id
+    WHERE
+        (industry_id BETWEEN 101000 AND 101006) AND
+        fiscal_year = 2022 AND
+        fiscal_period = 'Q2'
+)
+
+SELECT *
+FROM
+    income_statement_ratio
+WHERE
+    interest_coverage > (SELECT AVG(interest_coverage) FROM income_statement_ratio)
+ORDER BY
+    interest_coverage ASC;

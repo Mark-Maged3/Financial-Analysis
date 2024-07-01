@@ -1,0 +1,28 @@
+WITH financial_leverage_ratios AS(
+    SELECT
+        us_companies.company_id,
+        us_companies.ticker,
+        Company_Name,
+        total_liabilities,
+        total_equity,
+        total_assets,
+        ROUND(total_liabilities / NULLIF(total_equity, 0), 2) AS debt_to_equity,
+        ROUND(total_liabilities / NULLIF(total_assets, 0), 2) AS debt_to_total_assets
+    FROM 
+        us_companies
+    LEFT JOIN balance_sheet ON us_companies.company_id = balance_sheet.company_id
+    WHERE
+        (industry_id BETWEEN 101000 AND 101006) AND
+        fiscal_year = 2022 AND
+        fiscal_period = 'Q2'
+)
+
+SELECT *
+FROM
+    financial_leverage_ratios
+WHERE
+    (debt_to_equity BETWEEN 0 AND (SELECT AVG(debt_to_equity) FROM financial_leverage_ratios)) AND
+    (debt_to_total_assets BETWEEN 0 AND (SELECT AVG(debt_to_total_assets) FROM financial_leverage_ratios)) 
+ORDER BY
+    debt_to_equity ASC;
+
