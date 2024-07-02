@@ -1,5 +1,5 @@
 /*The data of all United States companies in the stock market was provided by simfin,
-it provides the financial statements for these companies over the last 5 years but the data is delayed by 12 months,
+it provides the financial statements of these companies over the last 5 years but the data is delayed by 12 months,
 industry_id between 101000 and 101006 coresponds to the technology industry*/
 WITH liquidity_profitability_join AS(
     WITH liquidity_filter AS(
