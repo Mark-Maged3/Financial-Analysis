@@ -1,14 +1,14 @@
 COPY US_Companies
 FROM 'C:\feps\FEPS\3rd year\Econometrics\PostgreSQL\Financial Analysis\csv_files\us-companies\us-companies.csv'
-WITH (FORMAT csv, Header True, DELIMITER ';')
+WITH (FORMAT csv, Header True, DELIMITER ';');
 
 COPY income_statement
 FROM 'C:\feps\FEPS\3rd year\Econometrics\PostgreSQL\Financial Analysis\csv_files\us-income-quarterly\us-income-quarterly.csv'
-WITH (FORMAT csv, HEADER True, DELIMITER ';')
+WITH (FORMAT csv, HEADER True, DELIMITER ';');
 
 COPY Balance_Sheet
 FROM 'C:\feps\FEPS\3rd year\Econometrics\PostgreSQL\Financial Analysis\csv_files\us-balance-quarterly\us-balance-quarterly.csv'
-WITH (FORMAT csv, HEADER True, DELIMITER ';')
+WITH (FORMAT csv, HEADER True, DELIMITER ';');
 
 
 

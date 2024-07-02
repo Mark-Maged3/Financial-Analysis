@@ -1,1 +1,1 @@
-CREATE DATABASE Financial_Query
+CREATE DATABASE Financial_Query;

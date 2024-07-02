@@ -10,7 +10,7 @@ CREATE TABLE US_Companies(
     Market VARCHAR(250),
     CIK INT,
     Main_Currency VARCHAR(10)
-)
+);
 
 CREATE TABLE Income_Statement(
     Ticker VARCHAR(250),
