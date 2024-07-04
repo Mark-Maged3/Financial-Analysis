@@ -1,0 +1,151 @@
+WITH liquidity_profitability_join AS(
+    WITH liquidity_filter AS(
+        WITH liquidity_ratio AS( 
+            SELECT
+                us_companies.company_id,
+                us_companies.ticker,
+                Company_Name,
+                Total_Current_Assets,
+                Inventories,
+                Total_Current_Liabilities,
+                ROUND((total_current_assets - Inventories) / NULLIF(Total_Current_Liabilities, 0), 2) AS acid_test_ratio
+            FROM
+                us_companies
+            LEFT JOIN balance_sheet ON us_companies.company_id = balance_sheet.company_id
+            WHERE
+                (industry_id BETWEEN 101000 AND 101006) AND
+                fiscal_year = 2022 AND
+                fiscal_period = 'Q2' 
+        )
+        SELECT *
+        FROM
+            liquidity_ratio
+        WHERE
+            acid_test_ratio > (SELECT AVG(acid_test_ratio) FROM liquidity_ratio)
+        ORDER BY
+            acid_test_ratio DESC
+    ),
+    profitability_filter AS(
+        WITH profitability_ratios AS(
+            SELECT
+                us_companies.company_id,
+                us_companies.ticker,
+                company_name,
+                gross_profit,
+                net_income,
+                revenue,
+                total_assets,
+                total_equity,
+                ROUND(gross_profit / NULLIF(revenue, 0), 4) AS gross_profit_margin,
+                ROUND(net_income / NULLIF(revenue, 0), 4) AS net_profit_margin,
+                ROUND(net_income / NULLIF(total_assets, 0), 4) AS return_on_investment,
+                ROUND(net_income / NULLIF(total_equity, 0), 4) AS return_on_equity
+            FROM
+                us_companies
+            LEFT JOIN income_statement ON us_companies.company_id = income_statement.company_id
+            LEFT JOIN balance_sheet ON us_companies.company_id = balance_sheet.company_id
+            WHERE
+                (industry_id BETWEEN 101000 AND 101006) AND
+                income_statement.fiscal_year = 2022 AND
+                balance_sheet.fiscal_year = 2022 AND
+                income_statement.fiscal_period = 'Q2' AND
+                balance_sheet.fiscal_period = 'Q2'
+        )
+        SELECT *
+        FROM
+            profitability_ratios
+        WHERE
+            gross_profit_margin > (SELECT AVG(gross_profit_margin) FROM profitability_ratios) AND
+            net_profit_margin > (SELECT AVG(net_profit_margin) FROM profitability_ratios) AND
+            return_on_investment > (SELECT AVG(return_on_investment) FROM profitability_ratios) AND
+            return_on_equity > (SELECT AVG(return_on_equity) FROM profitability_ratios) 
+    )
+    SELECT
+        liquidity_filter.company_id,
+        liquidity_filter.ticker,
+        liquidity_filter.company_name,
+        acid_test_ratio,
+        gross_profit_margin,
+        net_profit_margin,
+        return_on_investment,
+        return_on_equity
+    FROM
+        liquidity_filter
+    INNER JOIN profitability_filter ON liquidity_filter.company_id = profitability_filter.company_id
+),
+financial_leverage_interest_coverage_join AS(
+    WITH financial_leverage_filter AS(
+        WITH financial_leverage_ratios AS(
+            SELECT
+                us_companies.company_id,
+                us_companies.ticker,
+                Company_Name,
+                total_liabilities,
+                total_equity,
+                total_assets,
+                ROUND(total_liabilities / NULLIF(total_equity, 0), 2) AS debt_to_equity,
+                ROUND(total_liabilities / NULLIF(total_assets, 0), 2) AS debt_to_total_assets
+            FROM 
+                us_companies
+            LEFT JOIN balance_sheet ON us_companies.company_id = balance_sheet.company_id
+            WHERE
+                (industry_id BETWEEN 101000 AND 101006) AND
+                fiscal_year = 2022 AND
+                fiscal_period = 'Q2'
+        )
+        SELECT *
+        FROM
+            financial_leverage_ratios
+        WHERE
+            (debt_to_equity BETWEEN 0 AND (SELECT AVG(debt_to_equity) FROM financial_leverage_ratios)) AND
+            (debt_to_total_assets BETWEEN 0 AND (SELECT AVG(debt_to_total_assets) FROM financial_leverage_ratios)) 
+    ),
+    interest_coverage_filter AS(
+        WITH income_statement_ratio AS(
+            SELECT
+                us_companies.company_id,
+                us_companies.ticker,
+                company_name,
+                operating_income,
+                interest_expense_net,
+                ROUND(operating_income / NULLIF(interest_expense_net, 0), 2) AS interest_coverage
+            FROM
+                us_companies
+            LEFT JOIN income_statement ON us_companies.company_id = income_statement.company_id
+            WHERE
+                (industry_id BETWEEN 101000 AND 101006) AND
+                fiscal_year = 2022 AND
+                fiscal_period = 'Q2'
+        )
+        SELECT *
+        FROM
+            income_statement_ratio
+        WHERE
+            interest_coverage > (SELECT AVG(interest_coverage) FROM income_statement_ratio)
+    )
+    SELECT
+        financial_leverage_filter.company_id,
+        financial_leverage_filter.ticker,
+        financial_leverage_filter.company_name,
+        debt_to_equity,
+        debt_to_total_assets,
+        interest_coverage
+    FROM
+        financial_leverage_filter
+    INNER JOIN interest_coverage_filter ON financial_leverage_filter.company_id = interest_coverage_filter.company_id
+)
+
+SELECT
+    liquidity_profitability_join.ticker,
+    liquidity_profitability_join.company_name,
+    acid_test_ratio,
+    gross_profit_margin,
+    net_profit_margin,
+    return_on_investment,
+    return_on_equity,
+    debt_to_equity,
+    debt_to_total_assets,
+    interest_coverage
+FROM
+    liquidity_profitability_join
+INNER JOIN financial_leverage_interest_coverage_join ON liquidity_profitability_join.company_id = financial_leverage_interest_coverage_join.company_id;
