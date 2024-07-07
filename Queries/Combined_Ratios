@@ -43,5 +43,5 @@ WHERE
     gross_profit_margin > (SELECT AVG(gross_profit_margin) FROM ratio_calculations) AND
     net_profit_margin > (SELECT AVG(net_profit_margin) FROM ratio_calculations) AND
     return_on_investment > (SELECT AVG(return_on_investment) FROM ratio_calculations) AND
-    return_on_equity > (SELECT AVG(return_on_equity) FROM ratio_calculations) 
+    return_on_equity > (SELECT AVG(return_on_equity) FROM ratio_calculations);
 
